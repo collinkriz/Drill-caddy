@@ -589,8 +589,6 @@ function renderProgress(){
     ${setOpen?`<div class="setgrid">
       <label>Plan start date<input type="date" id="startIn" value="${S.start}"></label>
       <label>Starting BPM<input type="number" inputmode="numeric" id="baseIn" value="${S.baseline}"></label></div>
-    <label style="display:block;margin-top:12px">Restore streak (days before today)<div style="display:flex;gap:8px;margin-top:6px"><input type="number" inputmode="numeric" id="restoreIn" placeholder="e.g. 12" style="flex:1"><button class="tgo" data-a="restore">Restore</button></div></label>
-    <p class="muted small" style="margin-top:6px">Marks the picking routine done for that many days before today, so your 🔥 count comes back.</p>
     <p class="muted small" style="margin-top:10px">Your log is saved on this phone. Export a backup now and then.</p>
     <div class="btnrow"><button data-a="copy">Copy log as text</button><button data-a="export">Export backup</button><button data-a="import">Import backup</button><button data-a="reset" class="danger">Reset everything</button></div>`:''}</div>`;
   document.getElementById('progress').innerHTML=h;
@@ -634,11 +632,9 @@ const ACT={
   spick:b=>{const st=sEdit(cur);st.p=b.dataset.id;st.why='picked';st.s=[false,false,false,false];st.bpm=null;st.r=null;open.delete('slib');save();render();window.scrollTo({top:0,behavior:'smooth'})},
   hdrill:b=>{const d=edit(cur),i=+b.dataset.i;d.h[i]=!d.h[i];if(d.h[i])open.delete('h'+i);save();render();if(hDone(cur)&&d.h[i])toast('All hand drills done ✋')},
   sets:b=>{const d=edit(cur);d.sets=Math.max(0,d.sets+ +b.dataset.n);save();render()},
-  tgt:b=>{const d=edit(cur);const v=Math.max(20,targetFor(cur)+ +b.dataset.n);d.tgt=v===autoTarget(cur)?null:v;save();render()},
+  tgt:b=>{const d=edit(cur);const v=Math.max(20,targetFor(cur)+ +b.dataset.n);
+    if(!loggedBefore(cur).length&&!inReset(cur)){S.baseline=v;d.tgt=null}else d.tgt=v===autoTarget(cur)?null:v;save();render()},
   tgtauto:()=>{edit(cur).tgt=null;save();render()},
-  restore:()=>{const n=parseInt((document.getElementById('restoreIn')||{}).value);if(!(n>0&&n<=365))return toast('Enter a number of days');
-    const tk=todayKey();for(let i=1;i<=n;i++){const d=edit(addDays(tk,-i));d.g=d.g.map(()=>true)}
-    const first=addDays(tk,-n);if(first<S.start)S.start=first;save();render();toast(`Streak restored: ${streak()} days 🔥`)},
   lbpm:b=>{const d=edit(cur);d.bpm=Math.max(20,(d.bpm??targetFor(cur))+ +b.dataset.n);save();render()},
   clean:()=>{const d=edit(cur);d.clean=!d.clean;if(d.clean)d.tense=false;if(d.clean&&!d.bpm)d.bpm=targetFor(cur);save();render()},
   tense:()=>{const d=edit(cur);d.tense=!d.tense;if(d.tense)d.clean=false;save();render()},
@@ -670,6 +666,6 @@ let lastToday=todayKey();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(T.on)wake(true);const tk=todayKey();if(tk!==lastToday&&cur===lastToday)cur=tk;lastToday=tk;render()}});
 render();
 </script>
-<div id="lu-stamp" style="font:500 11px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.02em;text-align:center;opacity:.55;padding:20px 16px 12px">Last updated Nov 7, 2026, 12:03 AM EST</div>
+<div id="lu-stamp" style="font:500 11px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.02em;text-align:center;opacity:.55;padding:20px 16px 12px">Last updated Nov 7, 2026, 12:04 AM EST</div>
 </body>
 </html>
