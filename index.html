@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Drill Caddy">
+<meta name="theme-color" content="#111214">
+<title>Drill Caddy</title>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+:root{--bg:#111214;--card:#1a1c20;--card2:#25282e;--line:#2c3036;--text:#eeebe6;--muted:#aeb3bb;--gtr:#f2a33a;--gtr2:rgba(242,163,58,.14);--hand:#3fc9b0;--hand2:rgba(63,201,176,.14);--st:#b9a2ff;--st2:rgba(185,162,255,.15);--bad:#ef6a5b;--ok:#7bd88f}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 84px)}
+#app{max-width:560px;margin:0 auto;padding:0 16px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation;text-align:left}
+input,textarea{font:inherit;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea{min-height:60px;resize:vertical}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 0 4px}
+.brand{font-weight:800;font-size:21px;letter-spacing:-.02em}
+.brand i{font-style:normal;color:var(--gtr)}
+.chip{font-size:13px;padding:5px 11px;border-radius:99px;background:var(--card2);color:var(--muted)}
+.chip b{color:var(--text)}
+.datebar{display:flex;align-items:center;gap:8px;margin:10px 0 12px}
+.nav{width:42px;height:42px;border-radius:12px;background:var(--card);font-size:22px;line-height:1;text-align:center}
+.date{flex:1;text-align:center}
+.date .d{font-weight:700;font-size:16px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-radius:14px;padding:4px;gap:4px;position:sticky;top:env(safe-area-inset-top);z-index:5;box-shadow:0 6px 14px var(--bg)}
+.tabs button{padding:6px 0 7px;border-radius:10px;font-weight:650;color:var(--muted);font-size:12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2}
+.tabs button i{font-style:normal;font-size:18px;line-height:1.2}
+.tabs button.on{background:var(--card2);color:var(--text)}
+section{display:none;padding-top:14px}
+section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:10px}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h3{font-size:16px;letter-spacing:-.01em}
+.row{display:flex;align-items:center}
+.sb{justify-content:space-between}
+.banner{background:var(--gtr2);color:var(--gtr);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.banner button{font-weight:700;text-decoration:underline}
+/* summary card */
+.sum{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sum .big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.g .big{color:var(--gtr)} .h .big{color:var(--hand)}
+.pips{display:flex;gap:5px;margin-top:6px}
+.pips i{width:16px;height:6px;border-radius:99px;background:var(--card2)}
+.g .pips i.on{background:var(--gtr)} .h .pips i.on{background:var(--hand)}
+/* exercise cards */
+.ex{padding:0;overflow:hidden}
+.exhead{display:flex;align-items:center;gap:10px;padding:12px 14px 12px 16px}
+.exbtn{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+.exbtn .info{flex:1;min-width:0}
+.meta{font-size:13px;color:var(--muted);margin-top:1px}
+.chev{color:var(--muted);font-size:13px;transition:transform .2s}
+.open .chev{transform:rotate(90deg)}
+.check{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:18px;font-weight:800;color:transparent;transition:all .15s;text-align:center}
+.g .check.done{background:var(--gtr);border-color:var(--gtr);color:#1a1205}
+.h .check.done{background:var(--hand);border-color:var(--hand);color:#06201b}
+.s .check.done{background:var(--st);border-color:var(--st);color:#170f2e}
+.s .exbody h4{color:var(--st)} .s .tip{background:var(--st2)} .s .big{color:var(--st)} .s .pips i.on{background:var(--st)}
+/* strum */
+.pname{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--st);margin-top:2px}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--st2);color:var(--st);margin-left:6px;vertical-align:2px}
+.feel{font-size:14px;color:#d8d4cc;margin-top:6px}
+.sgrid{display:grid;gap:4px;margin-top:12px}
+.sc{border-radius:9px;background:var(--card2);text-align:center;padding:5px 0 6px;min-width:0}
+.sc .c{font-size:11px;font-weight:700;color:var(--muted);line-height:1.2}
+.sc .a{font-size:21px;font-weight:800;line-height:1.25;color:var(--text)}
+.sc.gh .a{color:#6b717a;font-weight:600}
+.sc.ac{background:var(--st2);box-shadow:inset 0 0 0 1.5px var(--st)}
+.sc.ac .a{color:var(--st)}
+.sc.beat .c{color:var(--text)}
+.barlbl{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:10px}
+.skey{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:10px}
+.skey b{color:var(--text)}
+.sfacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.sfacts div{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--muted)}
+.sfacts b{display:block;font-size:15px;color:var(--text)}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.chips button{padding:10px 4px;border-radius:10px;background:var(--card2);font-size:13px;font-weight:700;text-align:center;color:var(--muted)}
+.chips button.on{background:var(--st2);color:var(--st);box-shadow:inset 0 0 0 1.5px var(--st)}
+.swap{font-size:13px;font-weight:700;color:var(--st);padding:8px 12px;border-radius:10px;background:var(--st2);text-align:center;white-space:nowrap}
+.lib{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lib:last-child{border:0}
+.lib .info{flex:1;min-width:0}
+.lib .nt{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lib .pick{font-size:12px;font-weight:700;color:var(--st);padding:6px 10px;border-radius:8px;background:var(--st2)}
+.done-card h3{color:var(--muted)}
+.exbody{padding:4px 16px 16px;border-top:1px solid var(--line)}
+.exbody .what{margin:12px 0 4px;color:#d8d4cc}
+.exbody h4{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:800;margin:14px 0 6px}
+.g .exbody h4{color:var(--gtr)} .h .exbody h4{color:var(--hand)}
+.exbody ol,.exbody ul{padding-left:20px}
+.exbody li{margin:5px 0}
+.exbody p{margin:0}
+.tip{border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px}
+.g .tip{background:var(--gtr2)} .h .tip{background:var(--hand2)}
+.tip b{color:var(--text)}
+.plat{border-color:var(--hand)}
+.plat p,.plat li{font-size:14px}
+.plat b{color:var(--hand)}
+/* timer */
+.timer{display:flex;align-items:center;gap:12px}
+.timer .clock{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.timer .clock small{font-size:14px;color:var(--muted);font-weight:600}
+.timer .lbl{font-size:13px;color:var(--muted);margin-top:4px}
+.tbar{height:6px;border-radius:99px;background:var(--card2);margin-top:12px;position:relative;overflow:hidden}
+.tbar div{position:absolute;inset:0 auto 0 0;background:var(--gtr)}
+.tbar span{position:absolute;top:0;bottom:0;width:2px;background:var(--card)}
+.tgo{padding:11px 18px;border-radius:12px;background:var(--gtr);color:#1a1205;font-weight:800;text-align:center;min-width:84px}
+.treset{width:42px;height:42px;border-radius:12px;background:var(--card2);text-align:center;font-size:17px}
+/* docked timer */
+.dock{position:fixed;left:0;right:0;bottom:0;width:100%;max-width:none;margin:0;z-index:2147483647;border-radius:18px 18px 0 0;border:0;border-top:1px solid var(--line);background:var(--card);padding:12px max(16px,calc((100vw - 528px)/2)) calc(env(safe-area-inset-bottom) + 14px);box-shadow:0 -8px 24px rgba(0,0,0,.6)}
+.dock .clock{font-size:26px}
+.dock .tbar{margin-top:10px}
+#guitar{padding-bottom:calc(env(safe-area-inset-bottom) + 120px)}
+/* log */
+.logrow{display:flex;align-items:center;gap:10px;margin:10px 0 4px}
+.logrow input{text-align:center;font-size:24px;font-weight:800;padding:8px}
+.step{width:44px;height:44px;border-radius:50%;background:var(--card2);font-weight:700;font-size:18px;flex:none;text-align:center}
+.toggle{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:12px;background:var(--card2);margin-top:8px;font-size:14px}
+.toggle .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--muted);flex:none;display:grid;place-items:center;font-size:13px;color:transparent}
+.toggle.on.good{box-shadow:inset 0 0 0 1px var(--ok)}
+.toggle.on.good .box{background:var(--ok);border-color:var(--ok);color:#0b200f}
+.toggle.on.badt{box-shadow:inset 0 0 0 1px var(--bad)}
+.toggle.on.badt .box{background:var(--bad);border-color:var(--bad);color:#250a06}
+.next{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:14px}
+.next b{color:var(--gtr)}
+.linkbtn{font-size:13px;font-weight:700;color:var(--muted);margin-top:12px}
+.counter{display:flex;align-items:center;gap:10px}
+.counter b{font-size:20px;min-width:22px;text-align:center}
+.counter .step{width:36px;height:36px;font-size:16px}
+/* progress */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em}
+svg text{fill:var(--muted);font-size:11px}
+.cal{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+.cell{aspect-ratio:1;border-radius:10px;background:var(--card2);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:700;text-align:center}
+.cell.future{background:var(--card);border:1px dashed var(--line);color:var(--muted)}
+.cell.today{box-shadow:inset 0 0 0 2px var(--text)}
+.cell.sel{background:#33373e}
+.cell small{font-size:10px;color:var(--gtr);font-weight:700;min-height:11px}
+.dots{display:flex;gap:3px;margin-top:2px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dots i.g{background:var(--gtr)} .dots i.h{background:var(--hand)}
+.dots i.pg{box-shadow:inset 0 0 0 1.5px var(--gtr);background:none}
+.dots i.s{background:var(--st)} .dots i.ps{box-shadow:inset 0 0 0 1.5px var(--st);background:none}
+.dots i.ph{box-shadow:inset 0 0 0 1.5px var(--hand);background:none}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--c)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+td{padding:8px 0;border-bottom:1px solid var(--line)}
+tr:last-child td{border:0}
+td:last-child{text-align:right;font-weight:700}
+.entry{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.entry:last-child{border:0}
+.entry .n{color:var(--muted);font-size:13px;margin-top:2px}
+.fold{display:flex;justify-content:space-between;align-items:center;width:100%}
+.setgrid{display:grid;gap:10px;margin-top:12px}
+.setgrid label{font-size:13px;color:var(--muted);display:grid;gap:4px}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.btnrow button{padding:11px;border-radius:10px;background:var(--card2);font-weight:600;font-size:14px;text-align:center}
+.danger{color:#ff8a7d}
+.foot{text-align:center;padding:6px 10px 0}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 128px);transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:700;font-size:14px;opacity:0;transition:all .25s;pointer-events:none;z-index:2147483647;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">Drill <i>Caddy</i></div>
+    <div class="chip" id="streak"></div>
+  </header>
+  <div class="datebar">
+    <button class="nav" data-a="prev" aria-label="Previous day">‹</button>
+    <div class="date"><div class="d" id="dateLbl"></div><div class="muted small" id="dayLbl"></div></div>
+    <button class="nav" data-a="next" aria-label="Next day">›</button>
+  </div>
+  <nav class="tabs">
+    <button data-a="tab" data-t="guitar"><i>🎸</i>Picking</button>
+    <button data-a="tab" data-t="strum"><i>🎶</i>Strum</button>
+    <button data-a="tab" data-t="hands"><i>✋</i>Hands</button>
+    <button data-a="tab" data-t="progress"><i>📈</i>Progress</button>
+  </nav>
+  <section id="guitar"></section>
+  <section id="strum"></section>
+  <section id="hands"></section>
+  <section id="progress"></section>
+</div>
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script>
+/* ---------- exercise content ---------- */
+const SETUP='Put your index finger on the 1st fret of the low E string. One finger per fret: index = fret 1, middle = fret 2, ring = fret 3, pinky = fret 4. Press just behind each fret wire, not on top of it.';
+const ORDER_NOTE='The numbers are fingers and frets. 1 = index on fret 1, 4 = pinky on fret 4. So 1-3-2-4 means index, ring, middle, pinky.';
+const BLOCKS=[
+  {t:'Sync',tag:'Warm-up · 0:00–2:00',kind:'wa',
+   what:'Two minutes of slow quarter notes to wake up both hands. Today’s finger order keeps it from going on autopilot.',
+   setup:SETUP,
+   steps:['Set the metronome to 60. Play one note per click.','On the low E, play the frets in today’s order: <b>{A}</b>.','Repeat the same order on A, D, G, B, and high e, then work back down to the low E.','Pick strictly Down-Up-Down-Up, even when you change strings.'],
+   tips:[ORDER_NOTE,'Each note starts right on the click: no buzz, no gap.','Use just enough finger pressure to stop the buzz.'],
+   done:'Pick and fingers land together on every click.'},
+  {t:'Subdivide',tag:'Warm-up · 2:00–4:00',kind:'wb',
+   what:'Same idea, twice the notes. Eighth notes with a second finger order.',
+   setup:'Keep the metronome at 60.',
+   steps:['Play 2 notes per click. Count “1-and, 2-and.”','Use today’s second order: <b>{B}</b>.','Go across all six strings and back, same as before.','Downstroke on the click, upstroke on the “and.”'],
+   tips:['Pick strokes stay small. Doubling the notes shouldn’t double the motion.','Fingers hover close to the frets.'],
+   done:'Even eighth notes and loose hands. Now you’re warm.'},
+  {t:'Control',tag:'4:00–7:00',kind:'ctl',
+   what:'Sixteenth notes a notch below your target. This is where you groove the small, efficient picking motion you’ll need at full speed, without the pressure of the target tempo.',
+   setup:'Set the metronome to the tempo on this card, about 80% of today’s target. Back to the regular 1-2-3-4 order.',
+   steps:['Play 4 notes per click, counting “1-e-and-a.”','Play 1-2-3-4 on each string across all six and back.','After each full round, shift your hand up one fret (2-3-4-5, then 3-4-5-6). Climb a few frets, then work back down.','The first note of every click is a downstroke.'],
+   tips:['The pick tip should barely clear the string.','Motion comes from the wrist. Forearm and elbow stay quiet.','This should feel easy. If it doesn’t, drop a few BPM.'],
+   done:'Three minutes of even, effortless 16ths.'},
+  {t:'The Push',tag:'7:00–13:00',kind:'push',
+   what:'The main event. Six minutes at your target tempo to earn tomorrow’s +3 with the Rule of 3.',
+   setup:'Set the metronome to today’s target (top of this tab).',
+   steps:['Continuous 16ths: the same 1-2-3-4 drill, shifting up a fret each round like the Control block.','One “pass” = one full run up across all six strings and back.','Rule of 3: get three perfect passes in a row, then tap “3 perfect passes” in the log below. Tomorrow’s target goes up 3.','Miss notes, fall behind, or feel your forearm tighten? Drop a few BPM until it’s clean, then build back up.'],
+   tips:['“Perfect” means every note clean, on the beat, and your arm feels loose.','Speed comes from relaxation. If you’re tensing up to keep up, it’s too fast.'],
+   done:'Log the highest BPM you played cleanly, with no tension, in this block.'},
+  {t:'Mix It Up',tag:'13:00–15:00',kind:'mix',
+   what:'A slower finish that still teaches something. You take today’s first finger order from the Sync block, which you already played as quarter notes, and now play it as 16ths at an easy tempo.',
+   setup:'Set the metronome to the tempo on this card, about two-thirds of your target. Use finger order <b>{A}</b>.',
+   steps:['Play 16ths (4 per click) in the order <b>{A}</b> on the low E.','Repeat on each string up to the high e, then back down. Stay in one spot on the neck.','Keep the same order the whole two minutes. No switching.','Strict alternate picking, downstroke on every click.'],
+   tips:['This should feel doable. If you’re fumbling, drop the metronome 5 BPM. If it’s too easy, nudge it up next time.','Tired hands get tense. Keep the grip light and the motion small.'],
+   done:'Two minutes of clean 16ths in the new order. You finish loose, not fried.'}
+];
+const NB=BLOCKS.length;
+const ctlBpm=tg=>Math.max(40,Math.round(tg*.8));
+const mixBpm=tg=>Math.max(40,Math.round(tg*.65));
+const wuOrders=k=>{const n=Math.max(0,dayNum(k)-1);return[PERMS[(2*n)%23],PERMS[(2*n+1)%23]]};
+const PERMS=['1-3-2-4', '4-3-2-1', '2-1-4-3', '1-2-4-3', '2-1-3-4', '1-4-3-2', '3-2-1-4', '1-3-4-2', '2-3-1-4', '4-2-3-1', '3-4-1-2', '1-4-2-3', '2-4-1-3', '3-1-4-2', '4-1-3-2', '2-3-4-1', '3-1-2-4', '4-3-1-2', '2-4-3-1', '3-2-4-1', '4-1-2-3', '3-4-2-1', '4-2-1-3'];
+
+const DRILLS=[
+  {t:'Table Tapper',meta:'5 lifts per finger',anchor:true,
+   what:'Builds finger independence. Each finger learns to move on its own while the others stay still.',
+   setup:'Rest your fretting hand flat on a table, palm down. Fingers relaxed and slightly apart, thumb resting naturally.',
+   steps:['Lift your index finger straight up as high as is comfortable, then set it back down. Do this 5 times.','The other three fingers stay flat against the table the whole time.','Repeat with middle, then ring, then pinky. 5 lifts each.','For the ring finger, use the Anchor (see below).'],
+   tips:['Lift from the big knuckle. Don’t lift your wrist or roll your hand.','If another finger peels up off the table, slow down.','Slow and controlled beats fast and sloppy.'],
+   anchorTip:'Before you lift your ring finger, press your middle finger flat with your other hand. The middle and ring fingers’ tendons are linked, so the middle tends to drag along. Pinning it lets you work the ring finger on its own. This one improves gradually over weeks, so don’t force it.'},
+  {t:'Pairs Split',meta:'Open the middle–ring gap',
+   what:'Stretches and separates the middle and ring fingers, the two that like to move together.',
+   setup:'Hold your hand up in the air, fingers straight and together, palm facing away from you.',
+   steps:['Press your index and middle fingers together as a pair.','Press your ring and pinky fingers together as a second pair.','Spread the two pairs apart so a V-shaped gap opens only between your middle and ring fingers. Think Vulcan salute.','Hold for 2 seconds, close the gap, and repeat about 10 times.'],
+   tips:['Each pair stays glued together. Only the middle–ring gap opens.','Keep your thumb relaxed.'],
+   },
+  {t:'Thumb-to-Finger Squeeze',meta:'2 seconds per finger',
+   what:'Builds strength right in the fingertips, the same pressure you use to fret a note cleanly.',
+   setup:'Hold your hand up comfortably, palm facing you.',
+   steps:['Touch the tip of your thumb to the tip of your index finger, making a round “O” shape.','Press the two tips together firmly for 2 seconds, then release.','Move on to middle, ring, and pinky, 2 seconds each.','Go back from pinky to index. Do a few rounds.'],
+   tips:['Keep the “O” round, with fingertips curled like they’re fretting. Don’t let the finger flatten or the last joint collapse.','Firm, not painful.']},
+  {t:'Desk Claw',meta:'Pinky stays planted',
+   what:'Trains your pinky to stay curled and close while other fingers move. This fixes the “flying pinky” that shoots far off the fretboard.',
+   setup:'Rest your fingertips on a desk with your hand cupped and your knuckles arched high, like your hand is fretting a chord.',
+   steps:['Lift your index, middle, and ring fingers just off the desk.','Keep the tip of your pinky planted, with its knuckle staying arched instead of caving in.','Hold for 5–10 seconds, then set the three fingers back down.','Repeat a few times.'],
+   tips:['The pinky should stay curved like a little hook, not go straight.','If your pinky collapses, take a little weight off your hand.']}
+];
+
+/* ---------- strumming ---------- */
+// Tokens: D down · U up · - miss (arm still moves) · X muted chuck · B bass note · b alternate bass note · > accent
+const PATS=[
+  {id:'faith',n:'Old Faithful',m:'4/4',g:8,t:'D - D U - U D U',bpm:[70,110],feel:'Pop, folk and campfire. The one everybody defaults to, so today you play it on purpose.',tip:'The two silent spots (the “&” of 1, and beat 3) are where people stop their arm. Keep it swinging through them.'},
+  {id:'skip2',n:'Skip Two',m:'4/4',g:8,t:'D - - U - U D U',bpm:[70,110],feel:'Indie and acoustic pop. Same family as Old Faithful, but beat 2 is silent.',tip:'Your arm still goes down on beat 2. It just misses the strings. The next sound you make is an upstroke.'},
+  {id:'eighths',n:'Straight Eighths',m:'4/4',g:8,t:'D U D> U D U D> U',bpm:[70,120],feel:'Driving rock and pop.',tip:'Accent beats 2 and 4 (the backbeat): dig in a bit on those downstrokes and keep everything else lighter.'},
+  {id:'backbeat',n:'Backbeat Chuck',m:'4/4',g:8,t:'D - X U - U X U',bpm:[70,110],feel:'Singer-songwriter and pop with a snare-drum feel.',tip:'The chuck (✕) is a strum where the side of your strumming palm lands on the strings to mute them. It should sound like a snare hit.'},
+  {id:'antic',n:'Anticipation',m:'4/4',g:8,t:'D - D U - U - U',bpm:[70,110],feel:'Pop and rock with a forward lean.',tip:'That last “&” hits the next chord early, and you let it ring through the next beat 1. Change chords on the “&” of 4, not on 1.'},
+  {id:'offbeat',n:'Offbeat Skank',m:'4/4',g:8,t:'- U - U - U - U',bpm:[80,130],feel:'Reggae and ska.',tip:'Only play the “&”s, with short, choppy upstrokes. Ease off your fretting pressure right after each hit to cut the chord off.'},
+  {id:'alldown',n:'All Downs',m:'4/4',g:8,t:'D D D D D D D D',bpm:[70,120],feel:'Punk and hard-rock drive.',tip:'No upstrokes at all. Your hand resets above the strings between hits, so keep the motion small and from the wrist, or your forearm will cook.'},
+  {id:'boom',n:'Boom-Chick',m:'4/4',g:8,t:'B - D U B - D U',bpm:[70,110],feel:'Country and folk.',tip:'B = pick only the chord’s bass note (the root on its lowest string), then strum the top 3–4 strings for the D U.'},
+  {id:'altbass',n:'Alternating Bass',m:'4/4',g:8,t:'B - D - b - D -',bpm:[70,110],feel:'Classic country and Travis-ish folk.',tip:'B = root, b = an alternate bass note. G: low E 3rd fret, then open D. C: A string 3rd fret, then low E 3rd fret. D: open D, then open A.'},
+  {id:'halftime',n:'Half-Time',m:'4/4',g:8,t:'D> - - U X - - U',bpm:[70,100],feel:'Big choruses and slow, heavy grooves.',tip:'The chuck on beat 3 makes the groove feel half as fast. Let the beat-1 strum ring out.'},
+  {id:'shuffle',n:'Shuffle',m:'4/4',g:8,t:'D U D> U D U D> U',swing:true,bpm:[70,110],feel:'Blues, swing and old rock and roll.',tip:'Swing it: each down is long, each up is short (“DAH-da DAH-da”). The grid looks straight, but the feel isn’t.'},
+  {id:'waltz',n:'Waltz',m:'3/4',g:8,t:'D> - D U D U',bpm:[80,130],feel:'Ballads and folk waltzes in 3/4.',tip:'Three beats per bar. Lean into beat 1 so every bar feels like ONE-two-three.'},
+  {id:'bwaltz',n:'Bass Waltz',m:'3/4',g:8,t:'B - D U D U',bpm:[80,130],feel:'Country and folk waltzes.',tip:'Bass note on 1, then light strums on 2 and 3. Switch the bass note each bar: the root, then another chord tone on a different string.'},
+  {id:'sixeight',n:'6/8 Ballad',m:'6/8',g:8,t:'D> D U D> D U',bpm:[50,75],feel:'Slow ballads and soul. Two big pulses per bar, three notes each.',tip:'Count 1-2-3-4-5-6 with weight on 1 and 4. Set the metronome to click twice per bar (on 1 and 4); the BPM here is for those clicks.'},
+  {id:'gallop',n:'Gallop',m:'4/4',g:16,t:'D - D U D - D U D - D U D - D U',bpm:[60,95],feel:'Driving folk-rock and heavier rock.',tip:'Each beat goes DAH (rest) da-da. Down on the beat, then down-up on the back half, with the hand moving in 16ths the whole time.'},
+  {id:'funk',n:'Funk Scratch',m:'4/4',g:16,t:'D U D U X U D U D U D U X U D U',bpm:[60,90],feel:'Funk and R&B.',tip:'Constant tiny 16ths from the wrist. Keep most of them light, and make the chucks on 2 and 4 sharp.'},
+  {id:'clave',n:'Two-Bar Clave',m:'4/4',g:8,bars:2,t:'D - - U - - D - - - D - D - - -',bpm:[80,120],feel:'Bo Diddley beat and Latin-tinged rock.',tip:'The 3-2 clave: three hits in bar 1, two in bar 2. Keep the arm going down-up the whole time. Most strokes miss.'}
+];
+const PROGS=[['G','C','D','G'],['C','Am','Fmaj7','G'],['D','A','Em','G'],['Em','C','G','D'],['A','D','E','A'],['Am','G','C','E'],['E','A','B7','E'],['G','Em','C','D']];
+const RATES=[['easy','Felt natural'],['ok','Getting there'],['tough','Tough']];
+const patById=id=>PATS.find(p=>p.id===id)||PATS[0];
+const toks=p=>p.t.split(' ');
+function counts(p){
+  if(p.m==='6/8')return['1','2','3','4','5','6'];
+  const beats=p.m==='3/4'?3:4,sub=p.g===16?['','e','&','a']:['','&'],out=[];
+  for(let r=0;r<(p.bars||1);r++)for(let b=1;b<=beats;b++)sub.forEach(x=>out.push(x||String(b)));
+  return out;
+}
+const sNum=k=>Math.max(0,dayNum(k)-1);
+function strumFor(k){
+  const st=S.days[k]&&S.days[k].st;
+  if(st&&st.p)return{p:patById(st.p),why:st.why||'rotation'};
+  const back=S.days[addDays(k,-3)],r=back&&back.st;
+  if(r&&r.r==='tough'&&r.p)return{p:patById(r.p),why:'review'};
+  return{p:PATS[sNum(k)%PATS.length],why:'rotation'};
+}
+const progFor=k=>PROGS[sNum(k)%PROGS.length];
+function sEdit(k){const d=edit(k);if(!d.st){const f=strumFor(k);d.st={p:f.p.id,why:f.why,s:[false,false,false,false],bpm:null,r:null}}return d.st}
+const sPeek=k=>{const d=S.days[k];return d&&d.st?d.st:{s:[false,false,false,false],bpm:null,r:null}};
+const sDone=k=>sPeek(k).s.every(Boolean);
+function lastPlayed(id,before){let best='';for(const[k,d]of Object.entries(S.days)){if(k<before&&d.st&&d.st.p===id&&d.st.s.some(Boolean)&&k>best)best=k}return best}
+function ago(k){if(!k)return'Never played';const n=diffDays(k,todayKey());return n===0?'Today':n===1?'Yesterday':n+' days ago'}
+function gridHTML(p){
+  const t=toks(p),c=counts(p),perRow=p.m==='3/4'||p.m==='6/8'?6:8,rows=[];
+  for(let i=0;i<t.length;i+=perRow)rows.push(i);
+  return rows.map((start,ri)=>{
+    const cells=t.slice(start,start+perRow).map((tk,j)=>{
+      const i=start+j,acc=tk.endsWith('>'),k=tk.replace('>',''),down=i%2===0;
+      const a={D:'↓',U:'↑',X:'✕',B:'B',b:'b','-':down?'↓':'↑'}[k];
+      const beat=/^\d$/.test(c[i]);
+      return `<div class="sc ${k==='-'?'gh':''} ${acc?'ac':''} ${beat?'beat':''}"><div class="c">${c[i]}</div><div class="a">${a}</div></div>`;
+    }).join('');
+    const lbl=p.bars===2?`<div class="barlbl">Bar ${ri+1}</div>`:'';
+    return `${lbl}<div class="sgrid" style="grid-template-columns:repeat(${perRow},1fr)">${cells}</div>`;
+  }).join('');
+}
+const STEPS=[
+  {t:'Mute & Count',tag:'About 2 min',
+   what:'Get the pattern into your arm before chords get involved.',
+   setup:'Lay your fretting hand lightly across all six strings so nothing rings. No metronome yet.',
+   steps:['Play the pattern on the muted strings while counting out loud: {COUNT}.','Say “down” or “up” on every stroke that hits. Say nothing on the silent spots.','Keep your arm moving down-up on every count, even on the silent spots, where it moves but misses the strings.'],
+   tips:['Faint arrows on the grid show where your arm is moving without hitting.','Slow is fine. The goal is to stop thinking about it.'],
+   done:'Four bars in a row without having to think.'},
+  {t:'One Chord',tag:'About 3 min',
+   what:'Same pattern, real chord, steady tempo.',
+   setup:'Hold <b>{C1}</b>. Set the metronome to <b>{START}</b> BPM.',
+   steps:['Loop the pattern on {C1} with the metronome. One click = one beat.','Strum from the wrist and forearm, not the shoulder. The pick glides across the strings rather than digging in.','Once it feels steady, play some bars quiet and some loud. Dynamics are half of what makes a strum sound good.'],
+   tips:['If you lose your place, stop and restart on beat 1. Don’t limp through.','{TIP}'],
+   done:'A minute straight with the click, no hiccups.'},
+  {t:'Change Chords',tag:'About 3 min',
+   what:'The real test: keeping the pattern going through chord changes.',
+   setup:'Today’s progression: <b>{PROG}</b>. One bar per chord, then repeat.',
+   steps:['Same tempo. Play one bar of each chord, then loop the progression.','Change chords on beat 1. Your strumming arm never stops, even if your fretting hand is late.','If a change is late, start lifting your fingers on the last upstroke of the bar. A few open strings ringing there is normal and sounds fine.'],
+   tips:['Ugly changes with a steady arm beat clean changes with a stuttering arm.','{ANTIC}'],
+   done:'Three times through the progression with no stops.'},
+  {t:'Make It Groove',tag:'About 2 min',
+   what:'Push the tempo a bit and make it musical.',
+   setup:'Nudge the metronome toward <b>{GOAL}</b> BPM, or put on a song in this style ({FEEL}).',
+   steps:['Bump the tempo 5 BPM at a time while it stays clean.','Play the progression as if it’s a song: build up, pull back, end on a big strum.','Log the fastest tempo where it still felt good.'],
+   tips:['Playing along with a real recording is the best test of whether the feel is right.'],
+   done:'You log your tempo and how it felt.'}
+];
+
+/* ---------- dates ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const keyOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseKey=k=>{const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d,12)};
+const todayKey=()=>keyOf(new Date());
+const addDays=(k,n)=>{const d=parseKey(k);d.setDate(d.getDate()+n);return keyOf(d)};
+const diffDays=(a,b)=>Math.round((parseKey(b)-parseKey(a))/864e5);
+const fmt=(k,o={weekday:'short',month:'short',day:'numeric'})=>parseKey(k).toLocaleDateString(undefined,o);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- state ---------- */
+const LS='drillcaddy.v1';
+function load(){try{const r=JSON.parse(localStorage.getItem(LS));if(r&&r.days&&r.start)return r}catch(e){}return{start:todayKey(),baseline:60,days:{}}}
+function migrate(x){for(const d of Object.values(x.days||{})){if(d.g&&d.g.length===3){const[a,b,c]=d.g;d.g=[a,a,b,c,c]}}return x}
+let S=migrate(load());
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+save();
+const blank=()=>({st:null,g:Array(5).fill(false),h:[false,false,false,false],sets:0,bpm:null,clean:false,tense:false,note:''});
+const peek=k=>S.days[k]||blank();
+const edit=k=>(S.days[k]||=blank());
+const gDone=k=>peek(k).g.every(Boolean);
+const hDone=k=>peek(k).h.every(Boolean);
+const dayNum=k=>diffDays(S.start,k)+1;
+let cur=todayKey(),tab='guitar';
+const open=new Set();
+try{tab=localStorage.getItem(LS+'.tab')||'guitar'}catch(e){}
+
+/* targets, tension back-off, plateau reset */
+function inReset(k){const D=S.deload;if(!D)return null;const i=diffDays(D.start,k);return i>=0&&i<3?{...D,day:i+1}:null}
+const loggedBefore=k=>Object.keys(S.days).filter(x=>x<k&&S.days[x].bpm&&!inReset(x)).sort();
+function baseTarget(k){
+  const ks=loggedBefore(k);if(!ks.length)return S.baseline;
+  const d=S.days[ks[ks.length-1]],p=ks.length>1?S.days[ks[ks.length-2]]:null;
+  if(d.clean&&!d.tense)return d.bpm+3;
+  if(d.tense&&p&&p.tense)return Math.max(20,d.bpm-5);
+  return d.bpm;
+}
+function targetFor(k){const D=inReset(k);return D?Math.round(D.bpm*.9):baseTarget(k)}
+function stalled(k){
+  if(inReset(k))return 0;
+  if(S.deload&&diffDays(S.deload.start,k)<10)return 0;
+  const ks=loggedBefore(k).slice(-4);
+  return ks.length===4&&!ks.some(x=>S.days[x].clean&&!S.days[x].tense)?ks.length:0;
+}
+function streak(){let k=todayKey(),n=0;if(!gDone(k))k=addDays(k,-1);while(gDone(k)){n++;k=addDays(k,-1)}return n}
+const logged=()=>Object.entries(S.days).filter(([,d])=>d.bpm).sort((a,b)=>a[0]<b[0]?-1:1);
+
+/* ---------- render ---------- */
+function render(){
+  const isToday=cur===todayKey(),dn=dayNum(cur);
+  document.getElementById('dateLbl').textContent=isToday?'Today · '+fmt(cur):fmt(cur);
+  document.getElementById('dayLbl').textContent=dn<1?'Before your plan started':dn<=30?`Day ${dn} of 30`:`Day ${dn} · past the 30-day plan`;
+  const st=streak();
+  document.getElementById('streak').innerHTML=`🔥 <b>${st}</b> day${st===1?'':'s'}`;
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===tab));
+  const banner=isToday?'':`<div class="banner"><span>Logging ${esc(fmt(cur))}</span><button data-a="today">Back to today</button></div>`;
+  renderGuitar(banner);renderStrum(banner);renderHands(banner);renderProgress();
+}
+
+function exCard(kind,id,i,x,done,extra=''){
+  const isOpen=open.has(id);
+  return `<div class="card ex ${kind} ${done?'done-card':''} ${isOpen?'open':''}">
+    <div class="exhead">
+      <button class="exbtn" data-a="open" data-id="${id}"><span class="chev">▶</span><div class="info">
+        <div class="eyebrow">${x.tag||'Drill '+(i+1)}</div><h3>${x.t}</h3><div class="meta">${x.meta}</div></div></button>
+      <button class="check ${done?'done':''}" data-a="${{g:'gblock',h:'hdrill',s:'sstep'}[kind]}" data-i="${i}" aria-label="Mark done">✓</button>
+    </div>
+    ${isOpen?`<div class="exbody">
+      <p class="what">${x.what}</p>
+      <h4>Setup</h4><p>${x.setup}</p>
+      <h4>How to do it</h4><ol>${x.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+      <h4>Get it right</h4><ul>${x.tips.map(s=>`<li>${s}</li>`).join('')}</ul>
+      ${x.done?`<div class="tip"><b>Done when:</b> ${x.done}</div>`:''}
+      ${extra}
+    </div>`:''}
+  </div>`;
+}
+
+function renderGuitar(banner){
+  const d=peek(cur),tg=targetFor(cur),n=d.g.filter(Boolean).length;
+  let h=banner;
+  h+=`<div class="card g sum"><div><div class="eyebrow">Push target</div><div class="big">${tg} <span class="muted small">BPM · 16ths</span></div></div>
+    <div style="text-align:right"><div class="eyebrow">${n===NB?'Done 🎸':n+' of '+NB}</div><div class="pips">${BLOCKS.map((_,i)=>i).map(i=>`<i class="${d.g[i]?'on':''}"></i>`).join('')}</div></div></div>`;
+  const R0=inReset(cur);
+  if(R0)h+=`<div class="card plat"><div class="eyebrow">Plateau reset · day ${R0.day} of 3</div>
+    <p style="margin-top:6px">Today’s Push is at <b>${tg}</b>, 90% of ${R0.bpm}. Chase effortless, not fast: lightest grip, smallest pick motion, and accent a different note of the four on each pass. On day 4 you go back to ${R0.bpm}.</p>
+    <button class="linkbtn" data-a="endreset">End reset early</button></div>`;
+  else if(stalled(cur))h+=`<div class="card plat"><div class="eyebrow">Plateau check</div>
+    <p style="margin-top:6px">You’ve held at <b>${tg}</b> for 4 sessions without a clean +3. That’s normal, and grinding the same tempo harder usually makes it worse. Try this:</p>
+    <ol style="padding-left:20px;margin-top:8px"><li><b>3-day reset:</b> Push at 90% (${Math.round(tg*.9)}), all about relaxation and tiny motion.</li><li><b>Accent shift:</b> each pass, accent a different note of the four (1st, then 2nd, 3rd, 4th). It stops you leaning on the downbeat and exposes the weak spot in your picking.</li><li><b>Record one pass</b> on your phone. Unevenness you can’t feel while playing is obvious on playback.</li></ol>
+    <button class="tgo" style="width:100%;margin-top:12px;background:var(--hand);color:#06201b" data-a="startreset">Start 3-day reset</button></div>`;
+  h+=`<div class="card dock"><div class="timer"><div style="flex:1"><div class="clock"><span id="tTime">0:00</span> <small>/ 15:00</small></div><div class="lbl" id="tLabel">Practice timer</div></div>
+    <button class="treset" data-a="treset" aria-label="Reset timer">↺</button><button class="tgo" data-a="tgo" id="tBtn">Start</button></div>
+    <div class="tbar"><div id="tFill"></div><span style="left:13.33%"></span><span style="left:26.67%"></span><span style="left:46.67%"></span><span style="left:86.67%"></span></div></div>`;
+  const [oA,oB]=wuOrders(cur);
+  BLOCKS.forEach((b,i)=>{const meta={wa:`Metronome 60 · quarters · order ${oA}`,wb:`Metronome 60 · 8ths · order ${oB}`,ctl:`Metronome ${ctlBpm(tg)} · 16ths (80% of target)`,push:`Metronome ${tg} · 16ths · Rule of 3`,mix:`Metronome ${mixBpm(tg)} · 16ths · order ${oA}`}[b.kind];
+    h+=exCard('g','g'+i,i,{...b,meta,tag:`${i+1} · ${b.tag}`,steps:b.steps.map(x=>x.replace('{A}',oA).replace('{B}',oB))},d.g[i])});
+  const R=inReset(cur),nt=targetFor(addDays(cur,1)),RN=inReset(addDays(cur,1));
+  const next=!d.bpm?`Log your best clean BPM to set tomorrow’s target.`
+    :RN?`Tomorrow: reset day ${RN.day} of 3 at <b>${nt} BPM</b>.`
+    :R?`Reset done. Tomorrow: back to <b>${nt} BPM</b>.`
+    :nt>d.bpm?`Tomorrow: <b>${nt} BPM</b>. You earned the +3.`
+    :nt<d.bpm?`Tomorrow: <b>drop to ${nt} BPM</b>. Two tense days in a row means back off and rebuild loose.`
+    :d.tense?`Tomorrow: <b>stay at ${d.bpm} BPM</b> and keep it loose.`
+    :`Tomorrow: <b>stay at ${d.bpm} BPM</b> until you get 3 perfect passes.`;
+  const showNote=open.has('note')||d.note;
+  h+=`<div class="card"><div class="eyebrow">Today’s log</div>
+    <div class="logrow"><button class="step" data-a="lbpm" data-n="-1">−</button>
+    <input id="bpmIn" type="number" inputmode="numeric" placeholder="${tg}" value="${d.bpm??''}">
+    <button class="step" data-a="lbpm" data-n="1">+</button></div>
+    <div class="muted small" style="text-align:center">Highest clean, tension-free BPM (16ths)</div>
+    <button class="toggle good ${d.clean?'on':''}" data-a="clean"><span class="box">✓</span>3 perfect passes in a row</button>
+    <button class="toggle badt ${d.tense?'on':''}" data-a="tense"><span class="box">!</span>Mistakes or forearm tightened</button>
+    <div class="next">${next}</div>
+    ${showNote?`<textarea id="noteIn" style="margin-top:12px" placeholder="How did it feel? Anything click?">${esc(d.note)}</textarea>`:`<button class="linkbtn" data-a="addnote">+ Add a note</button>`}
+  </div>`;
+  document.getElementById('guitar').innerHTML=h;
+  tDraw();
+}
+
+/* ---------- practice timer ---------- */
+const SEGS=[{s:0,e:120,b:0,l:'1 · Sync · quarters',wa:1},{s:120,e:240,b:1,l:'2 · Subdivide · 8ths',wb:1},{s:240,e:420,b:2,l:'3 · Control · 16ths at 80%'},{s:420,e:780,b:3,l:'4 · The Push · at target'},{s:780,e:900,b:4,l:'5 · Mix It Up · slow 16ths',wa:1}];
+const T={on:false,acc:0,t0:0,seg:-1,iv:null};
+let AC=null,WL=null;
+function chime(n=2){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+  for(let i=0;i<n;i++){const t=AC.currentTime+.02+i*.18,o=AC.createOscillator(),g=AC.createGain();o.frequency.value=[880,1320,1760][i];g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.3)}}catch(e){}}
+async function wake(on){try{if(on&&'wakeLock'in navigator)WL=await navigator.wakeLock.request('screen');else if(!on&&WL){await WL.release();WL=null}}catch(e){}}
+const tEl=()=>T.acc+(T.on?(Date.now()-T.t0)/1000:0);
+function tStop(){T.acc=tEl();T.on=false;clearInterval(T.iv);wake(false)}
+function tGo(){
+  if(T.on){tStop();tDraw();return}
+  if(T.acc>=900){T.acc=0;T.seg=-1}
+  chime(0);T.on=true;T.t0=Date.now();T.iv=setInterval(tTick,250);wake(true);tTick();
+}
+function tReset(){if(T.on)tStop();T.acc=0;T.seg=-1;tDraw()}
+function tTick(){
+  const el=tEl();
+  if(el>=900){tStop();T.acc=900;T.seg=-1;edit(cur).g[NB-1]=true;save();chime(3);render();toast('Routine done. Log your BPM 🔥');return}
+  const si=SEGS.findIndex(x=>el>=x.s&&el<x.e);
+  if(si!==T.seg){
+    if(T.seg>=0){chime();toast(SEGS[si].l+(SEGS[si].wb?' · '+wuOrders(cur)[1]:''));const pb=SEGS[T.seg].b;if(pb!==SEGS[si].b){edit(cur).g[pb]=true;save();T.seg=si;render();return}}
+    T.seg=si;
+  }
+  tDraw();
+}
+function tDraw(){
+  const te=document.getElementById('tTime');if(!te)return;
+  const el=tEl();te.textContent=`${Math.floor(el/60)}:${pad(Math.floor(el%60))}`;
+  document.getElementById('tFill').style.width=(el/900*100)+'%';
+  const seg=SEGS.find(x=>el>=x.s&&el<x.e),[oA,oB]=wuOrders(cur);
+  document.getElementById('tLabel').textContent=el>=900?'Routine complete':el>0?seg.l+(seg.wa?' · '+oA:seg.wb?' · '+oB:''):'Chimes at each block change';
+  document.getElementById('tBtn').textContent=T.on?'Pause':el>=900?'Again':el>0?'Resume':'Start';
+}
+
+function renderStrum(banner){
+  const {p,why}=strumFor(cur),st=sPeek(cur),pr=progFor(cur),n=st.s.filter(Boolean).length;
+  const sw=lastPlayed(p.id,cur);
+  let h=banner;
+  h+=`<div class="card s"><div class="row sb" style="align-items:flex-start;gap:10px"><div style="min-width:0">
+      <div class="eyebrow">Today’s pattern${why==='review'?'<span class="badge">Review</span>':''}</div>
+      <div class="pname">${p.n}</div>
+      <div class="meta">${p.m}${p.swing?' · swung':''} · ${p.g===16?'16th':'8th'}-note grid · ${ago(sw)}</div></div>
+      <button class="swap" data-a="sswap">↻ Swap</button></div>
+    <div class="feel">${p.feel}</div>
+    ${gridHTML(p)}
+    <div class="skey"><span><b>↓ ↑</b> strum</span><span><b>faint</b> arm moves, misses</span>${/X/.test(p.t)?'<span><b>✕</b> muted chuck</span>':''}${/[Bb]/.test(p.t)?'<span><b>B b</b> bass note</span>':''}${/>/.test(p.t)?'<span><b>outlined</b> accent</span>':''}</div>
+    <div class="sfacts"><div>Tempo<b>${p.bpm[0]} → ${p.bpm[1]} BPM</b></div><div>Progression<b>${pr.join(' – ')}</b></div></div>
+    <div class="row sb" style="margin-top:12px"><span class="eyebrow">${n===4?'Done 🎶':n+' of 4 steps'}</span><div class="pips" style="margin:0">${[0,1,2,3].map(i=>`<i class="${st.s[i]?'on':''}"></i>`).join('')}</div></div>
+  </div>`;
+  const fill=x=>x.replace(/\{C1\}/g,pr[0]).replace('{PROG}',pr.join(' → ')).replace('{START}',p.bpm[0]).replace('{GOAL}',p.bpm[1])
+    .replace('{COUNT}',`“${counts(p).join(' ')}”`).replace('{FEEL}',p.feel.split('.')[0].toLowerCase()).replace('{TIP}',p.tip)
+    .replace('{ANTIC}',p.id==='antic'?'Today’s exception: this pattern changes on the “&” of 4, just before beat 1.':'Look at the next chord shape before you need it.');
+  STEPS.forEach((x,i)=>{h+=exCard('s','s'+i,i,{...x,tag:`${i+1} · ${x.tag}`,meta:'',what:fill(x.what),setup:fill(x.setup),steps:x.steps.map(fill),tips:x.tips.map(fill)},st.s[i])});
+  h+=`<div class="card s"><div class="eyebrow">Today’s strum log</div>
+    <div class="logrow"><button class="step" data-a="sbpm" data-n="-5">−</button>
+    <input id="sBpmIn" type="number" inputmode="numeric" placeholder="${p.bpm[0]}" value="${st.bpm??''}">
+    <button class="step" data-a="sbpm" data-n="5">+</button></div>
+    <div class="muted small" style="text-align:center">Fastest tempo where it still felt good</div>
+    <div class="chips">${RATES.map(([v,l])=>`<button class="${st.r===v?'on':''}" data-a="srate" data-v="${v}">${l}</button>`).join('')}</div>
+    <div class="next">${st.r==='tough'?`This one comes back for review in 3 days.`:st.r?`Nice. You’ll get a different pattern tomorrow.`:`Rate it. Anything marked “Tough” comes back in 3 days.`}</div></div>`;
+  const libOpen=open.has('slib');
+  h+=`<div class="card"><button class="fold" data-a="open" data-id="slib"><span class="eyebrow">Pattern library (${PATS.length})</span><span class="muted small">${libOpen?'Hide':'Show'}</span></button>
+    ${libOpen?PATS.map(q=>{const lp=lastPlayed(q.id,addDays(todayKey(),1));const lr=Object.values(S.days).filter(d=>d.st&&d.st.p===q.id&&d.st.r).map(d=>d.st.r).pop();
+      return `<div class="lib"><div class="info"><b>${q.n}</b> <span class="muted small">${q.m}</span><div class="nt">${q.t.replace(/>/g,'')}</div><div class="muted small">${ago(lp)}${lr?' · '+RATES.find(r=>r[0]===lr)[1]:''}</div></div>
+      ${q.id===p.id?'<span class="muted small">Today</span>':`<button class="pick" data-a="spick" data-id="${q.id}">Play today</button>`}</div>`}).join(''):''}</div>`;
+  document.getElementById('strum').innerHTML=h;
+}
+
+function renderHands(banner){
+  const d=peek(cur),n=d.h.filter(Boolean).length;
+  let h=banner;
+  h+=`<div class="card h sum"><div><div class="eyebrow">${n===4?'All done ✋':n+' of 4 drills'}</div><div class="pips">${[0,1,2,3].map(i=>`<i class="${d.h[i]?'on':''}"></i>`).join('')}</div></div>
+    <div style="text-align:right"><div class="eyebrow" style="margin-bottom:4px">Sessions today</div>
+    <div class="counter"><button class="step" data-a="sets" data-n="-1">−</button><b>${d.sets}</b><button class="step" data-a="sets" data-n="1">+</button></div></div></div>`;
+  DRILLS.forEach((x,i)=>{
+    const extra=x.anchorTip?`<div class="tip"><b>The Anchor:</b> ${x.anchorTip}</div>`:'';
+    h+=exCard('h','h'+i,i,x,d.h[i],extra);
+  });
+  h+=`<p class="muted small foot">Quiet desk drills, best done with your fretting hand. Stretch, don’t strain, and stop if anything hurts.</p>`;
+  document.getElementById('hands').innerHTML=h;
+}
+
+function renderProgress(){
+  const L=logged(),tk=todayKey();
+  const latest=L.length?L[L.length-1][1].bpm:null;
+  const span=Math.max(1,dayNum(tk));
+  let full=0;for(let i=0;i<span;i++){const k=addDays(S.start,i);if(gDone(k)&&hDone(k))full++}
+  let h=`<div class="stats">
+    <div class="stat"><span class="eyebrow">Latest</span><b>${latest??'—'}</b><span class="muted small">BPM</span></div>
+    <div class="stat"><span class="eyebrow">Gain</span><b style="color:var(--gtr)">${latest!=null?(latest-S.baseline>=0?'+':'')+(latest-S.baseline):'—'}</b><span class="muted small">from ${S.baseline}</span></div>
+    <div class="stat"><span class="eyebrow">Full days</span><b style="color:var(--hand)">${full}</b><span class="muted small">of ${span}</span></div></div>`;
+  h+=`<div class="card"><div class="row sb"><span class="eyebrow">BPM over time</span><span class="muted small">Goal: ${S.baseline+15}–${S.baseline+30}</span></div>${chart(L)}</div>`;
+  const N=Math.max(30,Math.min(dayNum(tk),90));let cal='';
+  for(let i=0;i<N;i++){
+    const k=addDays(S.start,i),d=peek(k);
+    const gc=gDone(k)?'g':d.g.some(Boolean)?'pg':'',hc=hDone(k)?'h':d.h.some(Boolean)?'ph':'',sc=sDone(k)?'s':sPeek(k).s.some(Boolean)?'ps':'';
+    cal+=`<button class="cell ${k>tk?'future':''} ${k===tk?'today':''} ${k===cur?'sel':''}" data-a="jump" data-k="${k}">${i+1}<small>${d.bpm??''}</small><span class="dots"><i class="${gc}"></i><i class="${sc}"></i><i class="${hc}"></i></span></button>`;
+  }
+  h+=`<div class="card"><span class="eyebrow">30 days · tap a day to log it</span><div class="cal">${cal}</div>
+    <div class="legend"><span style="--c:var(--gtr)">Picking</span><span style="--c:var(--st)">Strum</span><span style="--c:var(--hand)">Hands</span><span style="--c:var(--line)">Outline = partly done</span></div></div>`;
+  const ms=[1,7,14,21,30].map(n=>{const k=addDays(S.start,n-1),d=peek(k);return`<tr><td>Day ${n} <span class="muted small">· ${esc(fmt(k,{month:'short',day:'numeric'}))}</span></td><td>${d.bpm?d.bpm+' BPM':'—'}</td></tr>`}).join('');
+  h+=`<div class="card"><span class="eyebrow">Milestones</span><table>${ms}</table></div>`;
+  const E=Object.entries(S.days).filter(([,d])=>d.bpm||d.note||d.g.some(Boolean)||d.h.some(Boolean)||(d.st&&d.st.s.some(Boolean))).sort((a,b)=>a[0]<b[0]?1:-1);
+  const logOpen=open.has('log');
+  h+=`<div class="card"><button class="fold" data-a="open" data-id="log"><span class="eyebrow">Daily log (${E.length})</span><span class="muted small">${logOpen?'Hide':'Show'}</span></button>
+    ${logOpen?(E.length?E.map(([k,d])=>`<div class="entry"><div><b>Day ${dayNum(k)}</b> <span class="muted">· ${esc(fmt(k))}</span></div>
+    <div class="n">🎸 ${d.g.filter(Boolean).length}/${d.g.length} · 🎶 ${d.st?d.st.s.filter(Boolean).length:0}/4 · ✋ ${d.h.filter(Boolean).length}/4${d.bpm?` · <b style="color:var(--gtr)">${d.bpm} BPM</b>`:''}${d.clean?' · 3 clean':''}${d.tense?' · tension':''}</div>
+    ${d.st&&d.st.s.some(Boolean)?`<div class="n">🎶 ${patById(d.st.p).n}${d.st.bpm?' at '+d.st.bpm+' BPM':''}${d.st.r?' · '+RATES.find(r=>r[0]===d.st.r)[1]:''}</div>`:''}
+    ${d.note?`<div class="n">“${esc(d.note)}”</div>`:''}</div>`).join(''):'<p class="muted small" style="margin-top:8px">Nothing logged yet.</p>'):''}</div>`;
+  const setOpen=open.has('settings');
+  h+=`<div class="card"><button class="fold" data-a="open" data-id="settings"><span class="eyebrow">Settings & backup</span><span class="muted small">${setOpen?'Hide':'Show'}</span></button>
+    ${setOpen?`<div class="setgrid">
+      <label>Plan start date<input type="date" id="startIn" value="${S.start}"></label>
+      <label>Starting BPM<input type="number" inputmode="numeric" id="baseIn" value="${S.baseline}"></label></div>
+    <p class="muted small" style="margin-top:10px">Your log is saved on this phone. Export a backup now and then.</p>
+    <div class="btnrow"><button data-a="copy">Copy log as text</button><button data-a="export">Export backup</button><button data-a="import">Import backup</button><button data-a="reset" class="danger">Reset everything</button></div>`:''}</div>`;
+  document.getElementById('progress').innerHTML=h;
+}
+
+function chart(L){
+  const N=Math.max(30,dayNum(todayKey()));
+  const pts=L.map(([k,d])=>[dayNum(k),d.bpm]).filter(p=>p[0]>=1&&p[0]<=N);
+  const W=340,H=170,l=30,r=10,t=10,b=24,vals=pts.map(p=>p[1]);
+  const lo=Math.floor(Math.min(S.baseline-5,...vals.map(v=>v-5))/5)*5,hi=Math.ceil(Math.max(S.baseline+35,...vals.map(v=>v+5))/5)*5;
+  const x=d=>l+(d-1)/(N-1)*(W-l-r),y=v=>t+(hi-v)/(hi-lo)*(H-t-b);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="margin-top:8px;display:block">`;
+  s+=`<rect x="${l}" y="${y(S.baseline+30)}" width="${W-l-r}" height="${y(S.baseline+15)-y(S.baseline+30)}" fill="var(--hand2)"/>`;
+  for(let v=lo;v<=hi;v+=10)s+=`<line x1="${l}" x2="${W-r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${l-6}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+  [1,7,14,21,30].filter(d=>d<=N).forEach(d=>s+=`<text x="${x(d)}" y="${H-6}" text-anchor="middle">D${d}</text>`);
+  if(pts.length){
+    s+=`<polyline points="${pts.map(p=>x(p[0])+','+y(p[1])).join(' ')}" fill="none" stroke="var(--gtr)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach(p=>s+=`<circle cx="${x(p[0])}" cy="${y(p[1])}" r="3.5" fill="var(--gtr)"/>`);
+  }else s+=`<text x="${W/2}" y="${H/2}" text-anchor="middle" style="font-size:12px">Log your first BPM to start the line</text>`;
+  return s+'</svg>';
+}
+
+/* ---------- actions ---------- */
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800)}
+function setTab(t){tab=t;try{localStorage.setItem(LS+'.tab',t)}catch(e){}render();window.scrollTo({top:0})}
+const ACT={
+  prev:()=>{cur=addDays(cur,-1);render()},
+  next:()=>{cur=addDays(cur,1);render()},
+  today:()=>{cur=todayKey();render()},
+  tab:b=>setTab(b.dataset.t),
+  jump:b=>{cur=b.dataset.k;setTab('guitar')},
+  open:b=>{const id=b.dataset.id;open.has(id)?open.delete(id):open.add(id);render()},
+  addnote:()=>{open.add('note');render();const n=document.getElementById('noteIn');if(n)n.focus()},
+  gblock:b=>{const d=edit(cur),i=+b.dataset.i;d.g[i]=!d.g[i];if(d.g[i])open.delete('g'+i);save();render();if(gDone(cur)&&d.g[i])toast('Guitar routine done 🎸')},
+  sstep:b=>{const st=sEdit(cur),i=+b.dataset.i;st.s[i]=!st.s[i];if(st.s[i])open.delete('s'+i);save();render();if(sDone(cur)&&st.s[i])toast('Strum practice done 🎶')},
+  srate:b=>{const st=sEdit(cur);st.r=st.r===b.dataset.v?null:b.dataset.v;save();render()},
+  sbpm:b=>{const st=sEdit(cur);st.bpm=Math.max(30,(st.bpm??strumFor(cur).p.bpm[0])+ +b.dataset.n);save();render()},
+  sswap:()=>{const cu=strumFor(cur).p;const pool=PATS.filter(q=>q.id!==cu.id).map(q=>[lastPlayed(q.id,cur),PATS.indexOf(q)]);
+    pool.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:((b[1]-PATS.indexOf(cu)+PATS.length)%PATS.length)-((a[1]-PATS.indexOf(cu)+PATS.length)%PATS.length));
+    const st=sEdit(cur);st.p=PATS[pool[0][1]].id;st.why='swap';st.s=[false,false,false,false];st.bpm=null;st.r=null;save();render();toast('Swapped to '+PATS[pool[0][1]].n)},
+  spick:b=>{const st=sEdit(cur);st.p=b.dataset.id;st.why='picked';st.s=[false,false,false,false];st.bpm=null;st.r=null;open.delete('slib');save();render();window.scrollTo({top:0,behavior:'smooth'})},
+  hdrill:b=>{const d=edit(cur),i=+b.dataset.i;d.h[i]=!d.h[i];if(d.h[i])open.delete('h'+i);save();render();if(hDone(cur)&&d.h[i])toast('All hand drills done ✋')},
+  sets:b=>{const d=edit(cur);d.sets=Math.max(0,d.sets+ +b.dataset.n);save();render()},
+  lbpm:b=>{const d=edit(cur);d.bpm=Math.max(20,(d.bpm??targetFor(cur))+ +b.dataset.n);save();render()},
+  clean:()=>{const d=edit(cur);d.clean=!d.clean;if(d.clean)d.tense=false;if(d.clean&&!d.bpm)d.bpm=targetFor(cur);save();render()},
+  tense:()=>{const d=edit(cur);d.tense=!d.tense;if(d.tense)d.clean=false;save();render()},
+  tgo:tGo,treset:tReset,
+  startreset:()=>{S.deload={start:cur,bpm:baseTarget(cur)};save();render();toast('Reset started: 3 easy days')},
+  endreset:()=>{if(S.deload)S.deload.start=addDays(cur,-3);save();render()},
+  copy:()=>{
+    const lines=[`Drill Caddy log — started ${S.start}, baseline ${S.baseline} BPM`];
+    Object.keys(S.days).sort().forEach(k=>{const d=S.days[k];if(!(d.bpm||d.note||d.g.some(Boolean)||d.h.some(Boolean)||(d.st&&d.st.s.some(Boolean))))return;
+      lines.push(`Day ${dayNum(k)} (${k}): Picking ${d.g.filter(Boolean).length}/${d.g.length}${d.st&&d.st.s.some(Boolean)?`, Strum ${d.st.s.filter(Boolean).length}/4 (${patById(d.st.p).n}${d.st.bpm?' @ '+d.st.bpm:''}${d.st.r?', '+d.st.r:''})`:''}, Hands ${d.h.filter(Boolean).length}/4${d.sets?`, ${d.sets} desk sessions`:''}${d.bpm?`, max clean ${d.bpm} BPM`:''}${d.clean?' (3 perfect passes)':''}${d.tense?' (tension)':''}${d.note?` — ${d.note}`:''}`)});
+    const txt=lines.join('\n');
+    (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Log copied'),()=>{prompt('Copy your log:',txt)});
+  },
+  export:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));a.download=`drill-caddy-backup-${todayKey()}.json`;document.body.appendChild(a);a.click();a.remove()},
+  import:()=>document.getElementById('importFile').click(),
+  reset:()=>{if(confirm('Erase all logs and start over?')){S={start:todayKey(),baseline:60,days:{}};save();cur=todayKey();render();toast('Fresh start')}}
+};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(t&&ACT[t.dataset.a])ACT[t.dataset.a](t)});
+document.addEventListener('change',e=>{
+  const id=e.target.id;
+  if(id==='sBpmIn'){const v=parseInt(e.target.value);sEdit(cur).bpm=v>0?v:null;save();render()}
+  if(id==='bpmIn'){const v=parseInt(e.target.value);edit(cur).bpm=v>0?v:null;save();render()}
+  if(id==='startIn'&&e.target.value){S.start=e.target.value;save();render()}
+  if(id==='baseIn'){const v=parseInt(e.target.value);if(v>0){S.baseline=v;save();render()}}
+  if(id==='importFile'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!j.days||!j.start)throw 0;S=migrate(j);save();render();toast('Backup restored')}catch(err){alert('That file doesn’t look like a Drill Caddy backup.')}};r.readAsText(f);e.target.value=''}
+});
+document.addEventListener('input',e=>{if(e.target.id==='noteIn'){edit(cur).note=e.target.value;save()}});
+let lastToday=todayKey();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(T.on)wake(true);const tk=todayKey();if(tk!==lastToday&&cur===lastToday)cur=tk;lastToday=tk;render()}});
+render();
+</script>
+</body>
+</html>
