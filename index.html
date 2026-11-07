@@ -47,6 +47,7 @@ h3{font-size:16px;letter-spacing:-.01em}
 .banner button{font-weight:700;text-decoration:underline}
 /* summary card */
 .sum{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tgtrow{display:flex;align-items:center;gap:10px;margin-top:4px}.tgtrow .step{width:36px;height:36px;font-size:16px}
 .sum .big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
 .g .big{color:var(--gtr)} .h .big{color:var(--hand)}
 .pips{display:flex;gap:5px;margin-top:6px}
@@ -389,7 +390,8 @@ function baseTarget(k){
   if(d.tense&&p&&p.tense)return Math.max(20,d.bpm-5);
   return d.bpm;
 }
-function targetFor(k){const D=inReset(k);return D?Math.round(D.bpm*.9):baseTarget(k)}
+function autoTarget(k){const D=inReset(k);return D?Math.round(D.bpm*.9):baseTarget(k)}
+function targetFor(k){const t=S.days[k]&&S.days[k].tgt;return t||autoTarget(k)}
 function stalled(k){
   if(inReset(k))return 0;
   if(S.deload&&diffDays(S.deload.start,k)<10)return 0;
@@ -434,7 +436,7 @@ function exCard(kind,id,i,x,done,extra=''){
 function renderGuitar(banner){
   const d=peek(cur),tg=targetFor(cur),n=d.g.filter(Boolean).length;
   let h=banner;
-  h+=`<div class="card g sum"><div><div class="eyebrow">Push target</div><div class="big">${tg} <span class="muted small">BPM · 16ths</span></div></div>
+  h+=`<div class="card g sum"><div><div class="eyebrow">Push target${d.tgt?' · adjusted':''}</div><div class="tgtrow"><button class="step" data-a="tgt" data-n="-1" aria-label="Lower target">−</button><div class="big">${tg} <span class="muted small">BPM</span></div><button class="step" data-a="tgt" data-n="1" aria-label="Raise target">+</button></div>${d.tgt?`<button class="linkbtn" style="margin-top:4px" data-a="tgtauto">Back to suggested ${autoTarget(cur)}</button>`:''}</div>
     <div style="text-align:right"><div class="eyebrow">${n===NB?'Done 🎸':n+' of '+NB}</div><div class="pips">${BLOCKS.map((_,i)=>i).map(i=>`<i class="${d.g[i]?'on':''}"></i>`).join('')}</div></div></div>`;
   const R0=inReset(cur);
   if(R0)h+=`<div class="card plat"><div class="eyebrow">Plateau reset · day ${R0.day} of 3</div>
@@ -587,6 +589,8 @@ function renderProgress(){
     ${setOpen?`<div class="setgrid">
       <label>Plan start date<input type="date" id="startIn" value="${S.start}"></label>
       <label>Starting BPM<input type="number" inputmode="numeric" id="baseIn" value="${S.baseline}"></label></div>
+    <label style="display:block;margin-top:12px">Restore streak (days before today)<div style="display:flex;gap:8px;margin-top:6px"><input type="number" inputmode="numeric" id="restoreIn" placeholder="e.g. 12" style="flex:1"><button class="tgo" data-a="restore">Restore</button></div></label>
+    <p class="muted small" style="margin-top:6px">Marks the picking routine done for that many days before today, so your 🔥 count comes back.</p>
     <p class="muted small" style="margin-top:10px">Your log is saved on this phone. Export a backup now and then.</p>
     <div class="btnrow"><button data-a="copy">Copy log as text</button><button data-a="export">Export backup</button><button data-a="import">Import backup</button><button data-a="reset" class="danger">Reset everything</button></div>`:''}</div>`;
   document.getElementById('progress').innerHTML=h;
@@ -630,6 +634,11 @@ const ACT={
   spick:b=>{const st=sEdit(cur);st.p=b.dataset.id;st.why='picked';st.s=[false,false,false,false];st.bpm=null;st.r=null;open.delete('slib');save();render();window.scrollTo({top:0,behavior:'smooth'})},
   hdrill:b=>{const d=edit(cur),i=+b.dataset.i;d.h[i]=!d.h[i];if(d.h[i])open.delete('h'+i);save();render();if(hDone(cur)&&d.h[i])toast('All hand drills done ✋')},
   sets:b=>{const d=edit(cur);d.sets=Math.max(0,d.sets+ +b.dataset.n);save();render()},
+  tgt:b=>{const d=edit(cur);const v=Math.max(20,targetFor(cur)+ +b.dataset.n);d.tgt=v===autoTarget(cur)?null:v;save();render()},
+  tgtauto:()=>{edit(cur).tgt=null;save();render()},
+  restore:()=>{const n=parseInt((document.getElementById('restoreIn')||{}).value);if(!(n>0&&n<=365))return toast('Enter a number of days');
+    const tk=todayKey();for(let i=1;i<=n;i++){const d=edit(addDays(tk,-i));d.g=d.g.map(()=>true)}
+    const first=addDays(tk,-n);if(first<S.start)S.start=first;save();render();toast(`Streak restored: ${streak()} days 🔥`)},
   lbpm:b=>{const d=edit(cur);d.bpm=Math.max(20,(d.bpm??targetFor(cur))+ +b.dataset.n);save();render()},
   clean:()=>{const d=edit(cur);d.clean=!d.clean;if(d.clean)d.tense=false;if(d.clean&&!d.bpm)d.bpm=targetFor(cur);save();render()},
   tense:()=>{const d=edit(cur);d.tense=!d.tense;if(d.tense)d.clean=false;save();render()},
@@ -661,6 +670,6 @@ let lastToday=todayKey();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(T.on)wake(true);const tk=todayKey();if(tk!==lastToday&&cur===lastToday)cur=tk;lastToday=tk;render()}});
 render();
 </script>
-<div id="lu-stamp" style="font:500 11px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.02em;text-align:center;opacity:.55;padding:20px 16px 12px">Last updated Nov 6, 2026, 11:46 PM EST</div>
+<div id="lu-stamp" style="font:500 11px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.02em;text-align:center;opacity:.55;padding:20px 16px 12px">Last updated Nov 7, 2026, 12:03 AM EST</div>
 </body>
 </html>
